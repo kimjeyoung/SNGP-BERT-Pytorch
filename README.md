@@ -1,11 +1,11 @@
-# :fire: SNGP-BERT (Unofficial)
+# :fire: SNGP-BERT (Unofficial) :fire:
 This is re-implementation of **"Simple and Principled Uncertainty Estimation with Deterministic Deep Learning via Distance Awareness"** in Pytorch.
 
 The codes are based on [official repo (Tensorflow)](https://github.com/google/uncertainty-baselines/blob/main/baselines/clinc_intent/sngp.py) and [huggingface](https://huggingface.co/).
 
 Original Paper : [Link](https://arxiv.org/pdf/2006.10108.pdf)
 
-## Installation
+## Installation :coffee:
 
 Training environment : Ubuntu 18.04, python 3.6
 ```bash
@@ -36,7 +36,7 @@ SNGP-BERT
 ```
 
 
-## Dataset Info
+## Dataset Info :book:
 
 In their paper, the authors conducted OOD experiment for NLP using CLINC OOS intent detection benchmark dataset, the OOS dataset contains data for 150 in-domain services with 150 training
 sentences in each domain, and also 1500 natural out-of-domain utterances.
@@ -44,7 +44,7 @@ You can download the dataset at [Link](https://github.com/jereliu/datasets/raw/m
 
 Original dataset paper, and Github : [Paper Link](https://aclanthology.org/D19-1131/), [Git Link](https://github.com/clinc/oos-eval)
 
-## Run
+## Run :star2:
 
 #### Train
 ```bash
@@ -57,7 +57,7 @@ python main.py --train_or_test train --method sngp --device gpu --gpu 0
 python main.py --train_or_test test --method sngp --device gpu --gpu 0
 ```
 
-## Results
+## Results :sparkles:
 
 Results for `SNGP-BERT` on CLINC OOS.  
 **NOTE** : Depending on the random seed, the result may be slightly different.
