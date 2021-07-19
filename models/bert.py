@@ -392,19 +392,13 @@ class BertModel(nn.Module):
         self.pooler = BertPooler(config)
         self.config = config
 
-        assert not (checkpoint is None and not requires_grad), 'freezing without pretrain is wasting'
-        if checkpoint is not None:
-            self._load_pretrain(checkpoint, requires_grad)
-        self.requires_grad_(requires_grad)
+    def load_pretrain_huggingface(self, pretrained_state_dict):
+        current_model_state_dict = self.state_dict()
+        current_model_keys = [x for x in current_model_state_dict.keys()]
+        pretrained_keys = [x for x in pretrained_state_dict.keys()]
+        for i, key in enumerate(current_model_keys):
+            self.state_dict()[key].copy_(pretrained_state_dict[pretrained_keys[i]])
 
-    def _load_pretrain(self, checkpoint, requires_grad):
-        model = self.state_dict()
-        pretrained = torch.load(checkpoint)
-        pretrained_dict = {k: v for k, v in pretrained.items() if k in model}
-        model.update(pretrained_dict)
-        self.load_state_dict(model)
-        logger.info(f'success loading text model pretrain file freezing({not requires_grad}) {checkpoint} '
-                    f'with key names: ' + ', '.join(model.keys()))
 
     def forward(self, input_ids, token_type_ids: Optional[Tensor] = None,
                 attention_mask: Optional[Tensor] = None):
@@ -428,4 +422,6 @@ class BertModel(nn.Module):
 
 if __name__ == "__main__":
     lm_config = Config()
-    bert = BertModel(lm_config, checkpoint="../ckpt/bert-base-uncased-pytorch_model.bin")
+    bert = BertModel(lm_config)
+    bert.load_pretrain_huggingface(torch.load("../ckpt/bert-base-uncased-pytorch_model.bin"))
+    print(bert)

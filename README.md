@@ -48,26 +48,25 @@ Original dataset paper, and Github : [Paper Link](https://aclanthology.org/D19-1
 
 #### Train
 ```bash
-python main.py --train_or_test train --device gpu --gpu 0
+python main.py --train_or_test train --method sngp --device gpu --gpu 0
 ```
 
 #### Test
 
-If you utilize the pretrained SNPG-BERT, you can download ckeckpoint file at [Link]().
-Then, move the downloaded ckpt file to `/path-to-SNGP-BERT/sngp_ckpt/bestmodel.bin`
-
 ```bash
-python main.py --train_or_test test --device gpu --gpu 0
+python main.py --train_or_test test --method sngp --device gpu --gpu 0
 ```
 
 ## Results
 
-Results for `SNGP-BERT` on CLINC OOS.
+Results for `SNGP-BERT` on CLINC OOS.  
+**NOTE** : Depending on the random seed, the result may be slightly different.
 
 | Version | ACC | AUROC | AUPRC |
 | --- | --- | --- | --- |
 | Paper (Tensorflow) | 96.6 | 0.969 | 0.880 |
-| Pytorch | 0.0 | 0.0 | 0.0 |
+| Pytorch (batch size = 256) | 96.1 | 0.974 | 0.900 |
+| Pytorch (batch size = 64) | 95.9 | 0.972 | 0.894 |
 
 
 ## References

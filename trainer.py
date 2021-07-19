@@ -3,7 +3,7 @@ import os
 import numpy as np
 from tqdm import tqdm
 from models.bert import BertModel, Config
-from models.sngp import SNGP
+from models.sngp import SNGP, Deterministic
 from data_loader import DatasetLoader
 from torch.utils.data import DataLoader
 from models.optimizers import BertAdam
@@ -16,6 +16,7 @@ class Trainer:
         t_total = -1
         self.epochs = args.epochs
         self.device = args.device
+        self.method = args.method
         self.batch_size = args.batch_size
         self.save_path = args.save_path
         self.mean_field_factor = args.mean_field_factor
@@ -39,22 +40,29 @@ class Trainer:
 
         # default config is bert-base
         self.bert_config = Config()
-        self.backbone = BertModel(self.bert_config, checkpoint=args.bert_ckpt)
-        self.sngp_model = SNGP(self.backbone,
-                               hidden_size=self.bert_config.hidden_size,
-                               num_classes=self.num_classes,
-                               num_inducing=args.gp_hidden_dim,
-                               n_power_iterations=args.n_power_iterations,
-                               spec_norm_bound=args.spectral_norm_bound,
-                               device="cuda" if self.device == 'gpu' else 'cpu')
+        self.backbone = BertModel(self.bert_config)
+        self.backbone.load_pretrain_huggingface(torch.load(args.bert_ckpt))
+        if args.method == 'sngp':
+            self.sngp_model = SNGP(self.backbone,
+                                   hidden_size=self.bert_config.hidden_size,
+                                   num_classes=self.num_classes,
+                                   num_inducing=args.gp_hidden_dim,
+                                   n_power_iterations=args.n_power_iterations,
+                                   spec_norm_bound=args.spectral_norm_bound,
+                                   device="cuda" if self.device == 'gpu' else 'cpu')
+        else:
+            self.sngp_model = Deterministic(self.backbone,
+                                            hidden_size=self.bert_config.hidden_size,
+                                            num_classes=self.num_classes)
+
         if args.device == 'gpu':
             self.sngp_model = self.sngp_model.to("cuda")
         self.criterion = torch.nn.CrossEntropyLoss()
         self.optimizer = BertAdam(self.sngp_model.parameters(), lr=args.lr,
                                   warmup=args.warmup, weight_decay=args.weight_decay, t_total=t_total)
 
-        if args.train_or_test == 'test' and os.path.isfile(os.path.join(args.save_path, "bestmodel.bin")):
-            self.sngp_model.load_state_dict(torch.load(os.path.join(args.save_path, "bestmodel.bin")))
+        if args.train_or_test == 'test' and os.path.isfile(os.path.join(args.save_path, "bestmodel_{}.bin".format(self.method))):
+            self.sngp_model.load_state_dict(torch.load(os.path.join(args.save_path, "bestmodel.bin".format(self.method))))
 
     def train(self):
         best_acc = 0.
@@ -70,7 +78,7 @@ class Trainer:
                     batch = [x.to('cuda') for x in batch]
                 self.optimizer.zero_grad()
                 x_ids, x_segs, x_attns, label = batch
-                pred = self.sngp_model(x_ids, x_segs, x_attns, epoch=epoch)
+                pred = self.sngp_model(x_ids, x_segs, x_attns, update_cov=True)
                 loss = self.criterion(pred, label)
                 acc = accuracy_score(to_numpy(label), to_numpy(torch.argmax(pred, dim=-1))) * 100
 
@@ -87,14 +95,12 @@ class Trainer:
             if val_acc > best_acc:
                 best_acc = val_acc
                 test_auroc, test_auprc, test_acc = self.test()
+                print(f'\t Val dataset --> Best ACC : {best_acc:.3f}')
                 print(f'\t Test dataset --> AUROC : {test_auroc:.3f} | AUPRC: {test_auprc:.3f} | ACC: {test_acc:.3f}')
-                torch.save(self.sngp_model.state_dict(), os.path.join(self.save_path, "bestmodel.bin"))
+                torch.save(self.sngp_model.state_dict(), os.path.join(self.save_path, "bestmodel_{}.bin".format(self.method)))
 
-            # last epoch
-            if epoch + 1 == self.epochs:
-                test_auroc, test_auprc, test_acc = self.test()
-                print(f'\t Test dataset --> AUROC : {test_auroc:.3f} | AUPRC: {test_auprc:.3f} | ACC: {test_acc:.3f}')
-                torch.save(self.sngp_model.state_dict(), os.path.join(self.save_path, "lastmodel.bin"))
+            # reset precision matrix
+            self.sngp_model.reset_cov()
 
     def eval(self):
         self.sngp_model.eval()
@@ -124,7 +130,8 @@ class Trainer:
             self.optimizer.zero_grad()
             x_ids, x_segs, x_attns, label = batch
             logit, cov = self.sngp_model(x_ids, x_segs, x_attns, return_gp_cov=True)
-            logit = mean_field_logits(logit, cov, mean_field_factor=self.mean_field_factor)
+            if self.method == 'sngp':
+                logit = mean_field_logits(logit, cov, mean_field_factor=self.mean_field_factor)
             probs_list = torch.softmax(logit, dim=-1)
 
             cls_pred = to_numpy(torch.argmax(probs_list, dim=-1)).flatten().tolist()
