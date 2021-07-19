@@ -100,7 +100,8 @@ class Trainer:
                 torch.save(self.sngp_model.state_dict(), os.path.join(self.save_path, "bestmodel_{}.bin".format(self.method)))
 
             # reset precision matrix
-            self.sngp_model.reset_cov()
+            if self.method == 'sngp':
+                self.sngp_model.reset_cov()
 
     def eval(self):
         self.sngp_model.eval()
