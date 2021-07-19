@@ -1,4 +1,4 @@
-# SNGP-BERT (Unofficial)
+# : fire : SNGP-BERT (Unofficial)
 This is re-implementation of **"Simple and Principled Uncertainty Estimation with Deterministic Deep Learning via Distance Awareness"** in Pytorch.
 
 The codes are based on [official repo (Tensorflow)](https://github.com/google/uncertainty-baselines/blob/main/baselines/clinc_intent/sngp.py) and [huggingface](https://huggingface.co/).
