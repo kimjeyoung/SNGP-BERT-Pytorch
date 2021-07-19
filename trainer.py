@@ -62,7 +62,7 @@ class Trainer:
                                   warmup=args.warmup, weight_decay=args.weight_decay, t_total=t_total)
 
         if args.train_or_test == 'test' and os.path.isfile(os.path.join(args.save_path, "bestmodel_{}.bin".format(self.method))):
-            self.sngp_model.load_state_dict(torch.load(os.path.join(args.save_path, "bestmodel.bin".format(self.method))))
+            self.sngp_model.load_state_dict(torch.load(os.path.join(args.save_path, "bestmodel_{}.bin".format(self.method))))
 
     def train(self):
         best_acc = 0.
