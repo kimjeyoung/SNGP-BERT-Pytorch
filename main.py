@@ -14,7 +14,7 @@ def main(args):
     if args.train_or_test == 'train':
         sngp.train()
     else:
-        sngp.test()
+        sngp.test(training=False)
 
 
 if __name__ == '__main__':

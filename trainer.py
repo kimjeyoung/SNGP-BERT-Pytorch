@@ -120,7 +120,7 @@ class Trainer:
         acc = accuracy_score(y_true, y_pred) * 100
         return acc
 
-    def test(self):
+    def test(self, training=True):
         self.sngp_model.eval()
         y_true = []
         y_preds = []
@@ -153,5 +153,8 @@ class Trainer:
         indomain_true = np.array(y_true)[np.where(np.array(ood_true) == 0)[0]]
         indomain_pred = np.array(y_preds)[np.where(np.array(ood_true) == 0)[0]]
         test_acc = accuracy_score(indomain_true, indomain_pred)
-        return test_auroc, test_auprc, test_acc
+        if training:
+            return test_auroc, test_auprc, test_acc
+        else:
+            print(f'\t Test dataset --> AUROC : {test_auroc:.3f} | AUPRC: {test_auprc:.3f} | ACC: {test_acc:.3f}')
 
