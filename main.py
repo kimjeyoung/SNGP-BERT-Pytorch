@@ -7,6 +7,10 @@ def main(args):
     if args.device == 'gpu':
         os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
     sngp = Trainer(args)
+
+    if not os.path.exists(args.save_path):
+        os.makedirs(args.save_path)
+
     if args.train_or_test == 'train':
         sngp.train()
     else:

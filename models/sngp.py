@@ -42,7 +42,8 @@ class SNGP(nn.Module):
                  gp_cov_momentum=0.999,
                  gp_cov_ridge_penalty=1e-3,
                  epochs=40,
-                 num_classes=3):
+                 num_classes=3,
+                 device='gpu'):
         super(SNGP, self).__init__()
         self.backbone = backbone
         self.final_epochs = epochs - 1
@@ -61,14 +62,14 @@ class SNGP(nn.Module):
 
         self._gp_input_normalize_layer = torch.nn.LayerNorm(hidden_size, eps=layer_norm_eps)
         self._gp_output_layer = nn.Linear(num_inducing, num_classes, bias=False)
-        # gp_output_bias_trainable is false
+        # bert gp_output_bias_trainable is false
         # https://github.com/google/edward2/blob/main/edward2/tensorflow/layers/random_feature.py#L69
-        self._gp_output_bias = torch.tensor([self.gp_output_bias] * num_classes)
+        self._gp_output_bias = torch.tensor([self.gp_output_bias] * num_classes).to(device)
         self._random_feature = RandomFeatureLinear(self.pooled_output_dim, num_inducing)
 
         # Laplace Random Feature Covariance
         # Posterior precision matrix for the GP's random feature coefficients.
-        self.initial_precision_matrix = (self.gp_cov_ridge_penalty * torch.eye(num_inducing))
+        self.initial_precision_matrix = (self.gp_cov_ridge_penalty * torch.eye(num_inducing).to(device))
         self.precision_matrix = torch.nn.Parameter(copy.deepcopy(self.initial_precision_matrix), requires_grad=False)
 
     def extract_bert_features(self, latent_feature):
@@ -96,7 +97,7 @@ class SNGP(nn.Module):
 
         if last_epoch:
             # update precision matrix
-            self._gp_cov_layer(gp_feature)
+            self.update_cov(gp_feature)
         return gp_feature, gp_output
 
     def update_cov(self, gp_feature):
@@ -115,7 +116,8 @@ class SNGP(nn.Module):
             # Compute exact population-wise covariance without momentum.
             # If use this option, make sure to pass through data only once.
             precision_matrix_new = self.precision_matrix + precision_matrix_minibatch
-        self.precision_matrix = precision_matrix_new
+        #self.precision_matrix.weight = precision_matrix_new
+        self.precision_matrix = torch.nn.Parameter(precision_matrix_new, requires_grad=False)
 
     def compute_predictive_covariance(self, gp_feature):
         # https://github.com/google/edward2/blob/main/edward2/tensorflow/layers/random_feature.py#L403
