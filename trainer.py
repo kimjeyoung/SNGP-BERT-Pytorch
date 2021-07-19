@@ -129,7 +129,7 @@ class Trainer:
                 batch = [x.to('cuda') for x in batch]
             self.optimizer.zero_grad()
             x_ids, x_segs, x_attns, label = batch
-            logit, cov = self.sngp_model(x_ids, x_segs, x_attns, return_gp_cov=True)
+            logit, cov = self.sngp_model(x_ids, x_segs, x_attns, return_gp_cov=True, update_cov=False)
             if self.method == 'sngp':
                 logit = mean_field_logits(logit, cov, mean_field_factor=self.mean_field_factor)
             probs_list = torch.softmax(logit, dim=-1)
