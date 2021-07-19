@@ -72,6 +72,6 @@ Results for `SNGP-BERT` on CLINC OOS.
 
 ## References
 
-[1] https://github.com/google/uncertainty-baselines/blob/main/baselines/clinc_intent/sngp.py
+[1] https://github.com/google/uncertainty-baselines/blob/main/baselines/clinc_intent/sngp.py  
 [2] https://huggingface.co/  
 [3] https://github.com/google/edward2
