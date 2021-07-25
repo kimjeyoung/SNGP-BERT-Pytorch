@@ -13,7 +13,7 @@ pip3 install torch torchvision torchaudio
 pip install scikit-learn
 ```
 
-Download `bert-base-uncased` checkpoint from [hugginface-ckpt](https://huggingface.co/bert-base-uncased/tree/main)  
+Download `bert-base-uncased` checkpoint from [hugginface-ckpt](https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-uncased-pytorch_model.bin)  
 Download `bert-base-uncased` vocab file from [hugginface-vocab](https://huggingface.co/bert-base-uncased/resolve/main/vocab.txt)  
 Download CLINC OOS intent detection benchmark dataset from [tensorflow-dataset](https://github.com/jereliu/datasets/raw/master/clinc_oos.zip)
 
